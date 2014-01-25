@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 
 # Locate face in image. Using cv2 functions
 def detect_face(image):
@@ -38,10 +39,9 @@ def detect_face(image):
     return (x, x+lx, y, y+ly)
  
  
-def main():
+def getRGB(im):
  
     # Specify the image to process and pass it to the function
-    im = cv2.imread('/Users/grub/Desktop/Yale/makemebabies/image.jpg')
     a,b,c,d = detect_face(im)
 
     totR = totG = totB = count = 0
@@ -57,10 +57,41 @@ def main():
                 totB += im[i][j][2]
                 count+= 1
 
-    cv2.imshow('im',im)
-    cv2.waitKey(0)
+    # cv2.imshow('im',im)
+    # cv2.waitKey(0)
 
     return totR/count, totG/count, totB/count
  
+
+def main():
+    im1 = cv2.imread('/Users/grub/Desktop/Yale/BabyBlendr/python/image.jpg')
+    im2 = cv2.imread('/Users/grub/Desktop/Yale/BabyBlendr/python/image3.jpg')
+
+    avgR1, avgG1, avgB1 = getRGB(im1)
+    avgR2, avgG2, avgB2 = getRGB(im2)
+
+    avgR = (avgR1+avgR2)/2
+    avgG = (avgG1+avgG2)/2
+    avgB = (avgB1+avgB2)/2
+    result = np.array([avgR, avgG, avgB])
+
+    light = np.array([255, 218, 190])
+    medium = np.array([180, 138, 120])
+    dark = np.array([60, 46, 40])
+    
+    light_diff = np.linalg.norm(result-light)
+    medium_diff = np.linalg.norm(result-medium)
+    dark_diff = np.linalg.norm(result-dark)
+
+    result_diff = [light_diff, medium_diff, dark_diff]
+
+    if (min(result_diff) == light_diff):
+        print "Light skin tone"
+    elif (min(result_diff) == medium_diff):
+        print "Medium skin tone"
+    elif (min(result_diff) == dark_diff):
+        print "Dark skin tone"
+
+
 if __name__ == "__main__":
     main()
