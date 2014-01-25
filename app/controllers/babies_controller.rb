@@ -16,19 +16,38 @@ class BabiesController < ApplicationController
           f = File.open("app/assets/images/#{Time.now.strftime("%Y-%d-%m")}-#{s.id}.#{media.file_extension}", 'w:ASCII-8BIT')
           f.write(media)
           f.close
+          filename = File.basename(f)
+          parent = s.sender
+          #other_parent = get Mike's caption
         end
       end
-      snapcat.view(s.id) # mark as read
+      # snapcat.view(s.id) # mark as read
 
-      # get image
-      # get comment
-      # check if that parent1 exists
-      #    if so, make this parent 2
-      #       save Baby
-      #       send to process task
-      #       send image to both parents
-      # else, add to table as parent 1
+      # Check if this parent1 exists
+      matches = Baby.find(:all, :conditions => { :parent1 => parent, :parent2 => other_parent})
+      if matches
+        b = matches[0]
+        b.parent2 = parent
+        b.img2 = filename
+        b.save
+
+        # Create baby and send it out to both parents
+        created_baby = BabiesController.make_baby(b)
+        snapcat.send_media(b.final, b.parent1, view_duration: 10)
+        snapcat.send_media(b.final, b.parent2, view_duration: 10)
+      else
+        # This initiator is not in the table yet, add the first parent
+        b = Baby.new(:parent1 => parent, :parent2 => other_parent, :img1 => filename )
+        b.save
+
+        # Send a snap to the second person to tell them what to do
+        snapcat.send_media("app/assets/images/BabyBlendr.png", other_parent, view_duration: 10)
+      end
     end
+  end
+
+  def self.make_baby(baby)
+    link = "http://planning.thebump.com/baby-morpher/"
   end
 
   # GET /babies

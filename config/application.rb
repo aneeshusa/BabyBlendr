@@ -6,8 +6,6 @@ require 'rails/all'
 # you've limited to :test, :development, or :production.
 Bundler.require(:default, Rails.env)
 
-AWS.config(access_key_id: 'AKIAIWMOVNBRBE2YQ7XA', secret_access_key: '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', region: 'us-east-1')
-
 module Babies
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.

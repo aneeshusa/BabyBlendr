@@ -33,7 +33,7 @@ group :doc do
 end
 
 gem 'snapcat'
-gem 'aws-sdk', '~> 1.0'
+gem 'mechanize'
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
