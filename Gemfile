@@ -33,6 +33,7 @@ group :doc do
 end
 
 gem 'snapcat'
+gem 'selenium-webdriver'
 gem 'mechanize'
 
 # Use ActiveModel has_secure_password

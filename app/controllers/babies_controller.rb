@@ -3,51 +3,77 @@ class BabiesController < ApplicationController
 
   def self.get_new_snaps
     # Initialize a client and login
-    snapcat = Snapcat::Client.new('babyblendr')
-    snapcat.login('4sherpagrub')
+    snapcat = Snapcat::Client.new('facemerge')
+    snapcat.login('catsdogs')
     user = snapcat.user
 
     snaps = user.snaps_received
-    snaps.each do |s|
-      media_response = snapcat.media_for(s.id)
-      media = media_response.data[:media]
-      if media
-        if media.image?
-          f = File.open("app/assets/images/#{Time.now.strftime("%Y-%d-%m")}-#{s.id}.#{media.file_extension}", 'w:ASCII-8BIT')
-          f.write(media)
-          f.close
-          filename = File.basename(f)
-          parent = s.sender
-          #other_parent = get Mike's caption
+    if snaps
+      snaps.each do |s|
+        media_response = snapcat.media_for(s.id)
+        media = media_response.data[:media]
+        if media
+          if media.image?
+            f = File.open("app/assets/images/#{Time.now.strftime("%Y-%d-%m")}-#{s.id}.#{media.file_extension}", 'w:ASCII-8BIT')
+            f.write(media)
+            f.close
+            filename = File.basename(f)
+            filename = "app/assets/images/" + filename
+            parent = s.sender
+            # other_parent = "aneeshusa"
+          end
+        end
+
+        # Check if this parent1 exists
+        # matches = Baby.find(:all, :conditions => { :parent1 => parent, :parent2 => other_parent})
+        matches = Baby.all
+        if matches.empty?
+          # This initiator is not in the table yet, add the first parent
+          # b = Baby.new(:parent1 => parent, :parent2 => other_parent, :img1 => filename )
+          b = Baby.new({ :parent1 => parent, :img1 => filename })
+          b.save
+          # puts parent
+
+          # # Send a snap to the second person to tell them what to do
+          # provoke = File.open("app/assets/images/BabyBlendr.jpg", "rb").read
+          # snapcat.send_media(provoke, other_parent, view_duration: 10)
+        else
+          b = matches[0]
+          b.parent2 = parent
+          b.img2 = filename
+          b.save
+
+          # Create baby and send it out to both parents
+          created_baby = BabiesController.make_baby(b)
+
+          final = File.open("app/assets/images/" + b.id.to_s + ".jpg", "rb").read #is this 8 bit color?
+          snapcat.send_media(final, b.parent1, view_duration: 10)
+          snapcat.send_media(final, b.parent2, view_duration: 10)
+          b.destroy
         end
       end
-      # snapcat.view(s.id) # mark as read
-
-      # Check if this parent1 exists
-      matches = Baby.find(:all, :conditions => { :parent1 => parent, :parent2 => other_parent})
-      if matches
-        b = matches[0]
-        b.parent2 = parent
-        b.img2 = filename
-        b.save
-
-        # Create baby and send it out to both parents
-        created_baby = BabiesController.make_baby(b)
-        snapcat.send_media(b.final, b.parent1, view_duration: 10)
-        snapcat.send_media(b.final, b.parent2, view_duration: 10)
-      else
-        # This initiator is not in the table yet, add the first parent
-        b = Baby.new(:parent1 => parent, :parent2 => other_parent, :img1 => filename )
-        b.save
-
-        # Send a snap to the second person to tell them what to do
-        snapcat.send_media("app/assets/images/BabyBlendr.png", other_parent, view_duration: 10)
-      end
     end
+    snapcat.clear_feed
   end
 
   def self.make_baby(baby)
-    link = "http://planning.thebump.com/baby-morpher/"
+    link = "http://www.photofunia.com/lab/face_swap"
+    img1 = File.open(baby.img1)
+    img2 = File.open(baby.img2)
+
+    agent = Mechanize.new
+    page = agent.get(link)
+
+    page1 = page.form_with(:method => 'POST') do |upload_form|
+      upload_form.file_uploads[0].file_name = baby.img1
+      upload_form.file_uploads[1].file_name = baby.img2
+    end.submit
+
+    img = "http://www.photofunia.com" + page1.link_with(:href => /^\/save\/.\/default\//).href
+
+    page2 = agent.get(img)
+    
+    page2.save "app/assets/images/" + baby.id.to_s + '.jpg'
   end
 
   # GET /babies
