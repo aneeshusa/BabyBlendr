@@ -1,0 +1,29 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Parent1:</strong>
+  <%= @baby.parent1 %>
+</p>
+
+<p>
+  <strong>Parent2:</strong>
+  <%= @baby.parent2 %>
+</p>
+
+<p>
+  <strong>Img1:</strong>
+  <%= @baby.img1 %>
+</p>
+
+<p>
+  <strong>Img2:</strong>
+  <%= @baby.img2 %>
+</p>
+
+<p>
+  <strong>Final:</strong>
+  <%= @baby.final %>
+</p>
+
+<%= link_to 'Edit', edit_baby_path(@baby) %> |
+<%= link_to 'Back', babies_path %>
